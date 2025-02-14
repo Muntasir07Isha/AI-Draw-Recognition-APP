@@ -152,13 +152,17 @@ const DrawingCanvas = ({
               Reset
             </button>
             <button
-              onClick={() => onSubmit("Image Data")}
-              className={`px-4 py-2 rounded-lg hover:bg-opacity-80 transition ${
-                darkMode ? "bg-green-500 text-white" : "bg-green-500 text-white"
-              }`}
-            >
-              Submit
-            </button>
+  onClick={() => {
+    const imageData = p5Instance.canvas.toDataURL(); // ✅ Get the drawn image as Base64
+    onSubmit(imageData); // ✅ Send to backend
+  }}
+  className={`px-4 py-2 rounded-lg hover:bg-opacity-80 transition ${
+    darkMode ? "bg-green-500 text-white" : "bg-green-500 text-white"
+  }`}
+>
+  Submit
+</button>
+
           </div>
         </>
       )}
