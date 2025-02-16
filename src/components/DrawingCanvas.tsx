@@ -21,15 +21,27 @@ const DrawingCanvas = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [p5Instance, setP5Instance] = useState<any>(null);
+  const [canvasSize, setCanvasSize] = useState(400);
 
   useEffect(() => {
     setMounted(true);
+    
+    // Responsive canvas sizing
+    const updateCanvasSize = () => {
+      const width = document.getElementById('canvas-container')?.clientWidth || 400;
+      setCanvasSize(Math.min(width, 400));
+    };
+    
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => window.removeEventListener('resize', updateCanvasSize);
   }, []);
 
   const setup = (p5: any, canvasParentRef: any) => {
     setP5Instance(p5);
-    p5.createCanvas(400, 400).parent(canvasParentRef);
-    p5.background(darkMode ? 30 : 255); // 🔥 Dynamic Background (White in Light Mode, Dark in Dark Mode)
+    p5.createCanvas(canvasSize, canvasSize).parent(canvasParentRef);
+    p5.background(darkMode ? 30 : 255);
   };
 
   const draw = (p5: any) => {
@@ -49,10 +61,33 @@ const DrawingCanvas = ({
       p5.ellipse(p5.mouseX, p5.mouseY, 50, 50);
     }
   };
+  
+  // Mobile touch support
+  const touchStarted = (p5: any) => {
+    if (shape === "rectangle") {
+      p5.fill(color);
+      p5.rect(p5.touches[0].x, p5.touches[0].y, 50, 50);
+    } else if (shape === "circle") {
+      p5.fill(color);
+      p5.ellipse(p5.touches[0].x, p5.touches[0].y, 50, 50);
+    }
+    return false; // prevent default
+  };
+
+  const touchMoved = (p5: any) => {
+    if (shape === "") {
+      p5.stroke(color);
+      p5.strokeWeight(brushSize);
+      if (p5.touches && p5.touches.length > 0) {
+        p5.line(p5.touches[0].x, p5.touches[0].y, p5.touches[0].px, p5.touches[0].py);
+      }
+    }
+    return false; // prevent default
+  };
 
   const clearCanvas = () => {
     if (p5Instance) {
-      p5Instance.background(darkMode ? 30 : 255); // Clear the canvas
+      p5Instance.background(darkMode ? 30 : 255);
     }
   };
 
@@ -60,11 +95,11 @@ const DrawingCanvas = ({
     <div className="w-full flex flex-col items-center gap-6">
       {mounted && (
         <>
-          <div className="flex items-center gap-4 border-b pb-2 w-full justify-center">
+          <div className="flex flex-wrap items-center gap-4 border-b pb-2 w-full justify-center">
             <span className="font-semibold">Shapes:</span>
             <button
               onClick={() => setShape("")}
-              className={`px-3 py-1 border rounded-lg ${
+              className={`px-3 py-1 min-h-[44px] border rounded-lg ${
                 shape === ""
                   ? "bg-blue-500 text-white"
                   : darkMode
@@ -76,7 +111,7 @@ const DrawingCanvas = ({
             </button>
             <button
               onClick={() => setShape("rectangle")}
-              className={`px-3 py-1 border rounded-lg ${
+              className={`px-3 py-1 min-h-[44px] border rounded-lg ${
                 shape === "rectangle"
                   ? "bg-blue-500 text-white"
                   : darkMode
@@ -88,7 +123,7 @@ const DrawingCanvas = ({
             </button>
             <button
               onClick={() => setShape("circle")}
-              className={`px-3 py-1 border rounded-lg ${
+              className={`px-3 py-1 min-h-[44px] border rounded-lg ${
                 shape === "circle"
                   ? "bg-blue-500 text-white"
                   : darkMode
@@ -101,25 +136,48 @@ const DrawingCanvas = ({
           </div>
 
           {/* Drawing Canvas */}
-          <Sketch setup={setup} draw={draw} mousePressed={mousePressed} />
+          <div id="canvas-container" className="w-full max-w-[400px]">
+            <Sketch 
+              setup={setup} 
+              draw={draw} 
+              mousePressed={mousePressed}
+              touchStarted={touchStarted}
+              touchMoved={touchMoved}
+              windowResized={() => {
+                const width = document.getElementById('canvas-container')?.clientWidth || 400;
+                const size = Math.min(width, 400);
+                if (p5Instance) p5Instance.resizeCanvas(size, size);
+              }}
+            />
+          </div>
 
           {/* Color Picker & Brush Size */}
-          <div className="flex items-center justify-between w-full px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full px-4 gap-4">
             <div className="relative">
               <button
                 onClick={() => setShowColorPicker(!showColorPicker)}
                 className={`px-4 py-2 rounded-lg hover:bg-opacity-80 transition ${
                   darkMode ? "bg-blue-400 text-white" : "bg-blue-500 text-white"
                 }`}
+                style={{
+                  minHeight: '44px',
+                  minWidth: '100px'
+                }}
               >
                 Pick Color
               </button>
               {showColorPicker && (
                 <div className="absolute left-0 mt-2 z-10 shadow-lg">
-                  <SketchPicker
-                    color={color}
-                    onChange={(newColor) => setColor(newColor.hex)}
-                  />
+                  <div 
+                    className="fixed inset-0 bg-transparent" 
+                    onClick={() => setShowColorPicker(false)}
+                  ></div>
+                  <div className="relative">
+                    <SketchPicker
+                      color={color}
+                      onChange={(newColor) => setColor(newColor.hex)}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -148,21 +206,22 @@ const DrawingCanvas = ({
               className={`px-4 py-2 rounded-lg hover:bg-opacity-80 transition ${
                 darkMode ? "bg-red-500 text-white" : "bg-red-500 text-white"
               }`}
+              style={{ minHeight: '44px', minWidth: '80px' }}
             >
               Reset
             </button>
             <button
-  onClick={() => {
-    const imageData = p5Instance.canvas.toDataURL(); // ✅ Get the drawn image as Base64
-    onSubmit(imageData); // ✅ Send to backend
-  }}
-  className={`px-4 py-2 rounded-lg hover:bg-opacity-80 transition ${
-    darkMode ? "bg-green-500 text-white" : "bg-green-500 text-white"
-  }`}
->
-  Submit
-</button>
-
+              onClick={() => {
+                const imageData = p5Instance.canvas.toDataURL();
+                onSubmit(imageData);
+              }}
+              className={`px-4 py-2 rounded-lg hover:bg-opacity-80 transition ${
+                darkMode ? "bg-green-500 text-white" : "bg-green-500 text-white"
+              }`}
+              style={{ minHeight: '44px', minWidth: '80px' }}
+            >
+              Submit
+            </button>
           </div>
         </>
       )}

@@ -15,7 +15,7 @@ export default function Home() {
     setResult("⏳ AI is analyzing your drawing...");
   
     try {
-      const response = await fetch("http://localhost:5001/api/analyze", {
+      const response = await fetch("https://ai-draw-backend.onrender.com/api/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,6 +47,12 @@ export default function Home() {
           {darkMode ? <SunIcon className="h-6 w-6 text-yellow-400" /> : <MoonIcon className="h-6 w-6 text-gray-800" />}
         </button>
       </div>
+      <div className={`w-11/12 max-w-6xl mt-4 p-4 rounded-lg text-center ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"} shadow-md`}>
+  <h2 className="text-xl font-semibold mb-2">Instructions for Kids</h2>
+  <p className="text-lg">
+    Draw anything that comes to your mind! Let your imagination run wild and learn something new about your creation!
+  </p>
+</div>
 
       {/* Main Content */}
       <div className="flex flex-col md:flex-row w-11/12 max-w-6xl mt-4 gap-4 md:gap-6 items-center md:items-start">
