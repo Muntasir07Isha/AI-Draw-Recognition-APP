@@ -56,26 +56,35 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSubmit, darkMode }) => 
 
   const touchStarted = (p5: p5Types) => {
     if (p5.touches.length > 0) {
-      p5.fill(color);
+      p5.stroke(color);
+      p5.strokeWeight(brushSize);
+  
       const touch = p5.touches[0] as { x: number; y: number };
+  
       if (shape === "rectangle") {
+        p5.fill(color);
         p5.rect(touch.x, touch.y, 50, 50);
       } else if (shape === "circle") {
+        p5.fill(color);
         p5.ellipse(touch.x, touch.y, 50, 50);
       }
     }
-    return false;
+    return false; // Prevent scrolling on touch
   };
-
+  
   const touchMoved = (p5: p5Types) => {
     if (shape === "" && p5.touches.length > 0) {
       p5.stroke(color);
       p5.strokeWeight(brushSize);
+  
       const touch = p5.touches[0] as { x: number; y: number };
-      p5.line(touch.x, touch.y, p5.mouseX, p5.mouseY);
+      const prevTouch = p5.pmouseX && p5.pmouseY ? { x: p5.pmouseX, y: p5.pmouseY } : touch;
+  
+      p5.line(prevTouch.x, prevTouch.y, touch.x, touch.y);
     }
-    return false;
+    return false; // Prevent scrolling
   };
+  
 
   const clearCanvas = () => {
     if (p5Instance) {
@@ -102,7 +111,14 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSubmit, darkMode }) => 
 
           {/* Drawing Canvas */}
           <div id="canvas-container" className="w-full max-w-[400px]">
-            <Sketch setup={setup} draw={draw} mousePressed={mousePressed} touchStarted={touchStarted} touchMoved={touchMoved} />
+          <Sketch 
+  setup={setup} 
+  draw={draw} 
+  mousePressed={mousePressed} 
+  touchStarted={touchStarted} 
+  touchMoved={touchMoved} 
+/>
+
           </div>
 
           {/* Color Picker & Brush Size */}
