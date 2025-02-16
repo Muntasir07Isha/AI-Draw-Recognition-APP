@@ -51,6 +51,7 @@ export default function Home() {
   <h2 className="text-xl font-semibold mb-2">Instructions for Kids</h2>
   <p className="text-lg">
     Draw anything that comes to your mind! Let your imagination run wild and learn something new about your creation!
+    First response will take 50 seconds to load due to free deployment, after it works smooth.
   </p>
 </div>
 
@@ -66,9 +67,10 @@ export default function Home() {
         {/* Right Side: AI Output */}
         <div className={`w-full md:w-1/3 p-4 md:p-6 shadow-md rounded-lg transition-all text-sm ${darkMode ? "bg-gray-700 text-white" : "bg-white text-black"}`}>
   <h2 className="text-xl font-semibold mb-4">Output</h2>
-  <div className={`w-full h-80 flex items-center justify-center border rounded-lg px-6 py-4 transition-all ${darkMode ? "bg-gray-900 text-gray-300 border-gray-600" : "bg-gray-50 text-gray-700 border-gray-400"}`}>
-    <p className="text-lg">{result || "No result yet..."}</p>
-  </div>
+  <div className="w-full h-80 overflow-y-auto break-words p-4 border rounded-lg transition-all bg-gray-900 text-gray-300 border-gray-600">
+  <p className="text-lg leading-relaxed">{result || "No result yet..."}</p>
+</div>
+
 </div>
 
       </div>
